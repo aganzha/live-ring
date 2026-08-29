@@ -1,6 +1,7 @@
 use core::time::Duration;
 use emacs::{Env, Result, Value, defun};
-use gtk::{gdk, glib};
+use gtk::prelude::*;
+use gtk::{gdk, gio, glib};
 use std::sync::OnceLock;
 
 //use emacs::use_symbols;
@@ -9,6 +10,29 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 static GTK_INITIALIZED: OnceLock<bool> = OnceLock::new();
+
+// (defvar live-ring-registration
+//     (dbus-register-signal
+//      :session
+//      nil
+//      "/io/github/aganzha/LiveRing"
+//      "io.github.aganzha.LiveRing"
+//      "PasteChanged"
+//      #'(lambda (paste-text)
+//          (message "‼️ paste text ................%s" paste-text)
+//          )))
+fn emit_paste_signal(text: &str) {
+    if let Ok(conn) = gio::bus_get_sync(gio::BusType::Session, None::<&gio::Cancellable>) {
+        let args = glib::Variant::tuple_from_iter([text.to_variant()]);
+        let _ = conn.emit_signal(
+            None,
+            "/io/github/aganzha/LiveRing",
+            "io.github.aganzha.LiveRing",
+            "PasteChanged",
+            Some(&args),
+        );
+    }
+}
 
 #[emacs::module(name = "live-ring")]
 fn init<'a>(env: &'a Env) -> Result<Value<'a>> {
@@ -29,6 +53,7 @@ fn init<'a>(env: &'a Env) -> Result<Value<'a>> {
                         if *previous_paste != text {
                             eprintln!("🌻 ...............{}", text);
                             *previous_paste = text.to_string();
+                            emit_paste_signal(&previous_paste.clone())
                         }
                     }
                     glib::ControlFlow::Continue
