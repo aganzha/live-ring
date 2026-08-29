@@ -5,31 +5,31 @@ use std::sync::OnceLock;
 
 //use emacs::use_symbols;
 emacs::plugin_is_GPL_compatible!();
-
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use std::cell::RefCell;
+use std::rc::Rc;
 
 static GTK_INITIALIZED: OnceLock<bool> = OnceLock::new();
 
 #[emacs::module(name = "live-ring")]
 fn init<'a>(env: &'a Env) -> Result<Value<'a>> {
     let initialized = GTK_INITIALIZED.get_or_init(|| gtk::init().is_ok());
-
     if !*initialized {
         let _ = env.message("live-ring: failed to initialise gtk");
         return env.intern("t");
     }
+    let latest_paste = Rc::new(RefCell::new("".to_string()));
     let _ = env.message("🐦 live-ring: gtk initialized");
     if let Some(display) = gdk::Display::default() {
-        eprintln!("💦 ...............{}", display);
         if let Some(clipboard) = gtk::Clipboard::default(&display) {
-            println!("🧶 ...............{}", clipboard);
             glib::timeout_add_local(Duration::from_millis(1000), {
+                let latest_paste = latest_paste.clone();
                 move || {
-                    eprintln!("🦴 loop");
                     if let Some(text) = clipboard.wait_for_text() {
-                        eprintln!("🌻 ...............{}", text);
+                        let mut previous_paste = latest_paste.borrow_mut();
+                        if *previous_paste != text {
+                            eprintln!("🌻 ...............{}", text);
+                            *previous_paste = text.to_string();
+                        }
                     }
                     glib::ControlFlow::Continue
                 }
@@ -37,15 +37,4 @@ fn init<'a>(env: &'a Env) -> Result<Value<'a>> {
         }
     }
     env.intern("t")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
 }
