@@ -1,6 +1,6 @@
 Tiny emacs package which polls linux desktop (wayland/x11) clipboard and put its contents into emacs kill ring.
 
-> [!WARNING]
+> [!IMPORTANT]
 > Linux gtk builds only
 
 ## Installing
