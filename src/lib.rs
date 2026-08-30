@@ -11,16 +11,6 @@ use std::rc::Rc;
 
 static GTK_INITIALIZED: OnceLock<bool> = OnceLock::new();
 
-// (defvar live-ring-registration
-//     (dbus-register-signal
-//      :session
-//      nil
-//      "/io/github/aganzha/LiveRing"
-//      "io.github.aganzha.LiveRing"
-//      "PasteChanged"
-//      #'(lambda (paste-text)
-//          (message "‼️ paste text ................%s" paste-text)
-//          )))
 fn emit_paste_signal(text: &str) {
     if let Ok(conn) = gio::bus_get_sync(gio::BusType::Session, None::<&gio::Cancellable>) {
         let args = glib::Variant::tuple_from_iter([text.to_variant()]);

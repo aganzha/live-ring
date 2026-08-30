@@ -4,7 +4,7 @@
 
 ;; Author: Aleksey Ganzha <aganzha@yandex.ru>
 ;; URL: https://github.com/aganzha/live-ring
-;; Version: 0.1.10
+;; Version: 0.1.0
 ;; Package-Requires: ((emacs "30.2"))
 ;; Keywords: convenience, clipboard
 
